@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Online Voting Systemt</title>
+  <link href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&display=swap" rel="stylesheet">
+  <style>
+    :root { --text-xs: clamp(0.75rem, 0.7rem + 0.25vw, 0.875rem); --text-sm: clamp(0.875rem, 0.8rem + 0.35vw, 1rem); --text-base: clamp(1rem, 0.95rem + 0.25vw, 1.125rem); --text-lg: clamp(1.125rem, 1rem + 0.75vw, 1.5rem); --text-xl: clamp(1.5rem, 1.2rem + 1.25vw, 2rem); --space-1: 0.25rem; --space-2: 0.5rem; --space-3: 0.75rem; --space-4: 1rem; --space-5: 1.25rem; --space-6: 1.5rem; --space-8: 2rem; --space-10: 2.5rem; --space-12: 3rem; --radius-sm: 0.375rem; --radius-md: 0.5rem; --radius-lg: 0.75rem; --radius-xl: 1rem; --radius-full: 9999px; --color-bg:#f7f6f2; --color-surface:#f9f8f5; --color-surface-2:#fbfbf9; --color-border:#d4d1ca; --color-text:#28251d; --color-text-muted:#6d6b66; --color-primary:#01696f; --color-primary-hover:#0c4e54; --color-success:#437a22; --color-warning:#964219; --color-error:#a12c7b; --color-blue:#006494; --shadow-sm:0 1px 2px rgba(0,0,0,.06); --shadow-md:0 8px 24px rgba(0,0,0,.08); --font-body:'Satoshi', Arial, sans-serif; }
+    [data-theme="dark"] { --color-bg:#171614; --color-surface:#1c1b19; --color-surface-2:#201f1d; --color-border:#393836; --color-text:#e7e4de; --color-text-muted:#aaa59c; --color-primary:#4f98a3; --color-primary-hover:#227f8b; --shadow-sm:0 1px 2px rgba(0,0,0,.22); --shadow-md:0 8px 24px rgba(0,0,0,.35); }
+    * { box-sizing:border-box; }
+    body { margin:0; font-family:var(--font-body); background:var(--color-bg); color:var(--color-text); font-size:var(--text-base); }
+    button,input,select,textarea { font:inherit; }
+    .app { display:grid; grid-template-columns:280px 1fr; min-height:100vh; }
+    .sidebar { background:var(--color-surface); border-right:1px solid var(--color-border); padding:var(--space-6); position:sticky; top:0; height:100vh; overflow:auto; }
+    .brand { display:flex; align-items:center; gap:var(--space-3); margin-bottom:var(--space-8); }
+    .logo { width:42px; height:42px; border-radius:12px; background:linear-gradient(135deg,var(--color-primary),var(--color-blue)); display:grid; place-items:center; color:white; font-weight:700; }
+    .nav button { width:100%; text-align:left; padding:0.9rem 1rem; border:1px solid var(--color-border); background:transparent; color:var(--color-text); border-radius:var(--radius-lg); margin-bottom:var(--space-3); }
+    .nav button.active, .nav button:hover { background:var(--color-surface-2); border-color:var(--color-primary); }
+    .content { padding:var(--space-8); }
+    .topbar { display:flex; justify-content:space-between; align-items:center; gap:var(--space-4); margin-bottom:var(--space-8); flex-wrap:wrap; }
+    .title { font-size:var(--text-xl); font-weight:700; }
+    .panel { display:none; } .panel.active { display:block; }
+    .grid { display:grid; grid-template-columns:repeat(12,1fr); gap:var(--space-6); }
+    .card { grid-column:span 12; background:var(--color-surface); border:1px solid var(--color-border); border-radius:var(--radius-xl); box-shadow:var(--shadow-sm); padding:var(--space-6); }
+    .card.half { grid-column:span 6; } .card.third { grid-column:span 4; }
+    h2,h3 { margin:0 0 var(--space-4); } p { color:var(--color-text-muted); }
+    label { display:block; margin:0 0 .35rem; font-size:var(--text-sm); font-weight:600; }
+    input,select,textarea { width:100%; padding:0.9rem 1rem; border:1px solid var(--color-border); border-radius:var(--radius-lg); background:var(--color-surface-2); color:var(--color-text); margin-bottom:var(--space-4); }
+    .row { display:grid; grid-template-columns:repeat(2,1fr); gap:var(--space-4); }
+    .btn { border:none; border-radius:var(--radius-lg); padding:0.9rem 1.1rem; cursor:pointer; }
+    .btn-primary { background:var(--color-primary); color:white; } .btn-primary:hover { background:var(--color-primary-hover); }
+    .btn-secondary { background:transparent; color:var(--color-text); border:1px solid var(--color-border); }
+    .muted { color:var(--color-text-muted); font-size:var(--text-sm); } .badge { display:inline-block; padding:.35rem .65rem; border-radius:var(--radius-full); background:rgba(1,105,111,.12); color:var(--color-primary); font-size:var(--text-xs); font-weight:700; }
+    .candidate { border:1px solid var(--color-border); border-radius:var(--radius-lg); padding:var(--space-4); display:flex; justify-content:space-between; align-items:center; gap:var(--space-4); margin-bottom:var(--space-4); }
+    .status { padding:.25rem .6rem; border-radius:var(--radius-full); font-size:var(--text-xs); font-weight:700; } .ok { background:rgba(67,122,34,.16); color:var(--color-success); } .warn { background:rgba(150,66,25,.16); color:var(--color-warning); } .err { background:rgba(161,44,123,.16); color:var(--color-error); }
+    table { width:100%; border-collapse:collapse; } th,td { border-bottom:1px solid var(--color-border); padding:0.75rem; text-align:left; font-size:var(--text-sm); }
+    .mono { font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:var(--text-sm); word-break:break-all; white-space:pre-wrap; }
+    .otp-box { background:rgba(0,100,148,.12); color:var(--color-blue); border-radius:var(--radius-lg); padding:0.9rem 1rem; margin-bottom:var(--space-4); }
+    .hide { display:none !important; } .stack > * + * { margin-top:var(--space-3); }
+    @media (max-width: 900px){ .app{grid-template-columns:1fr;} .sidebar{position:relative;height:auto;} .card.half,.card.third{grid-column:span 12;} .row{grid-template-columns:1fr;} .content{padding:var(--space-4);} }
+  </style>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar">
+    <div class="brand"><div class="logo">V</div><div><div style="font-weight:700;">VoteVault</div><div class="muted">Online voting System</div></div></div>
+    <div class="nav">
+      <button class="active" data-target="dashboard">Overview</button>
+      <button data-target="register">Register</button>
+      <button data-target="login">Login</button>
+      <button data-target="vote">Vote</button>
+      <button data-target="dbview">DB View</button>
+      <button data-target="admin" data-admin-only="true">Admin</button>
+      <button data-target="setup" data-admin-only="true">Setup</button>
+      <button data-target="sql" data-admin-only="true">SQL schema</button>
+    </div>
+  </aside>
+  <main class="content">
+    <div class="topbar"><div><div class="title">Secure Voting System</div><div class="muted">Now with saved data across browser closes and admin-only protected pages.</div></div><button class="btn btn-secondary" id="themeToggle">Toggle theme</button></div>
+
+    <section class="panel active" id="dashboard"><div class="grid"><div class="card third"><span class="badge">Users</span><h3 id="statUsers">0</h3><p>Total registered voters.</p></div><div class="card third"><span class="badge">Votes</span><h3 id="statVotes">0</h3><p>Total submitted votes.</p></div><div class="card third"><span class="badge">Candidates</span><h3 id="statCandidates">0</h3><p>Available candidates.</p></div><div class="card half"><h2>Saved data</h2><div class="stack muted"><div>Users, login session, candidates, votes, and export history are stored in browser local storage.</div><div>Closing and reopening the HTML keeps the same data on the same browser and device.</div><div>Use a backend database for real multi-device and multi-user persistence.</div></div></div><div class="card half"><h2>Access rules</h2><div class="stack muted"><div>Admin, setup, and SQL pages are hidden from regular users.</div><div>Only logged-in admins can open those pages.</div><div>The first admin is still the only one allowed to decrypt exports.</div></div></div></div></section>
+
+    <section class="panel" id="register"><div class="card"><h2>Register voter</h2><p>Enter your voting name, phone number, and 8-digit voter ID.</p><div id="registerOtpInfo" class="otp-box hide"></div><form id="registerForm"><div class="row"><div><label>Name</label><input id="regName" required placeholder="Enter full name"></div><div><label>Phone number</label><input id="regPhone" required placeholder="9876543210"></div></div><div class="row"><div><label>Voter ID</label><input id="regVoterId" required placeholder="8 digits"></div><div><label>Role</label><select id="regRole"><option value="voter">Voter</option><option value="admin">Admin</option></select></div></div><button class="btn btn-primary" type="submit">Register and send OTP</button></form><form id="verifyOtpForm" class="hide" style="margin-top:1rem;">
+  <label>Enter OTP</label>
+  <div style="position:relative;">
+    <input id="regOtp" placeholder="6-digit OTP" required autocomplete="one-time-code" inputmode="numeric" maxlength="6" pattern="\d{6}">
+    <span id="webOtpIndicator" class="hide" style="position:absolute;right:1rem;top:50%;transform:translateY(-50%);font-size:var(--text-xs);color:var(--color-primary);font-weight:700;">⏳ Waiting for SMS…</span>
+  </div>
+  <div id="webOtpSupportBadge" class="hide otp-box" style="margin-bottom:var(--space-4);font-size:var(--text-sm);">
+    📱 <strong>WebOTP detected</strong> — Your browser will auto-fill the OTP from the incoming SMS. Just tap "Allow" when prompted.
+  </div>
+  <button class="btn btn-primary" type="submit">Verify OTP and activate account</button>
+</form><div class="muted" id="registerStatus"></div></div></section>
+
+    <section class="panel" id="login"><div class="card half"><h2>Login</h2><form id="loginForm"><label>Voter ID</label><input id="loginVoterId" placeholder="8-digit voter ID" required><label>Phone number</label><input id="loginPhone" placeholder="Registered phone number" required><button class="btn btn-primary" type="submit">Login</button></form><div style="display:flex;gap:.75rem;flex-wrap:wrap;"><button class="btn btn-secondary" id="logoutBtn" type="button">Logout</button><button class="btn btn-secondary" id="resetStorageBtn" type="button">Reset saved data</button></div><div id="loginStatus" class="muted" style="margin-top:1rem;"></div></div></section>
+
+    <section class="panel" id="vote"><div class="grid"><div class="card half"><h2>Current session</h2><div id="sessionBox" class="muted">No user logged in.</div></div><div class="card half"><h2>Vote status</h2><div id="voteStatus" class="muted">Login first to vote.</div></div><div class="card"><h2>Choose candidate</h2><div id="candidateList"></div></div></div></section>
+
+    <section class="panel" id="admin"><div class="grid"><div class="card half"><h2>Admin actions</h2><div class="muted" id="adminSession">Login as admin to manage candidates and exports.</div><form id="candidateForm"><label>Candidate name</label><input id="candidateName" placeholder="Add candidate"><button class="btn btn-primary" type="submit">Add candidate</button></form><div style="margin-top:1rem;display:flex;gap:.75rem;flex-wrap:wrap;"><button class="btn btn-secondary" id="exportBtn">Download encrypted text</button><button class="btn btn-secondary" id="verifyBtn">Verify imported text</button><button class="btn btn-secondary" id="decryptBtn">Decrypt latest export</button></div><input type="file" id="importFile" accept=".txt" style="margin-top:1rem;"><div id="adminStatus" class="muted" style="margin-top:1rem;"></div></div><div class="card half"><h2>Candidates</h2><div id="adminCandidates"></div></div><div class="card"><h2>Voting data</h2><table><thead><tr><th>Name</th><th>Voter ID</th><th>Phone</th><th>Role</th><th>Verified</th><th>Voted</th></tr></thead><tbody id="userTable"></tbody></table></div><div class="card"><h2>Results</h2><table><thead><tr><th>Candidate</th><th>Votes</th></tr></thead><tbody id="resultsTable"></tbody></table></div></div></section>
+
+    <section class="panel" id="dbview">
+      <div class="grid">
+        <div class="card">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--space-4);">
+            <h2 style="margin:0;">🗄️ Database View</h2>
+            <span class="badge" id="dbLastUpdated"></span>
+          </div>
+          <p>Live snapshot of all data stored in the in-browser database (localStorage). Refreshes automatically on every change.</p>
+        </div>
+
+        <div class="card">
+          <div style="display:flex;align-items:center;gap:var(--space-3);margin-bottom:var(--space-4);">
+            <h3 style="margin:0;">📋 users</h3>
+            <span class="badge" id="dbUsersCount">0 rows</span>
+          </div>
+          <div style="overflow-x:auto;">
+            <table>
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>user_id</th>
+                  <th>full_name</th>
+                  <th>phone_number</th>
+                  <th>voter_id</th>
+                  <th>role</th>
+                  <th>is_verified</th>
+                  <th>has_voted</th>
+                  <th>created_at</th>
+                </tr>
+              </thead>
+              <tbody id="dbUsersTable"></tbody>
+            </table>
+            <div id="dbUsersEmpty" class="muted" style="padding:1rem 0;display:none;">No users registered yet.</div>
+          </div>
+        </div>
+
+        <div class="card half">
+          <div style="display:flex;align-items:center;gap:var(--space-3);margin-bottom:var(--space-4);">
+            <h3 style="margin:0;">🏆 candidates</h3>
+            <span class="badge" id="dbCandidatesCount">0 rows</span>
+          </div>
+          <div style="overflow-x:auto;">
+            <table>
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>candidate_id</th>
+                  <th>candidate_name</th>
+                  <th>votes_received</th>
+                </tr>
+              </thead>
+              <tbody id="dbCandidatesTable"></tbody>
+            </table>
+            <div id="dbCandidatesEmpty" class="muted" style="padding:1rem 0;display:none;">No candidates found.</div>
+          </div>
+        </div>
+
+        <div class="card half">
+          <div style="display:flex;align-items:center;gap:var(--space-3);margin-bottom:var(--space-4);">
+            <h3 style="margin:0;">🗳️ votes</h3>
+            <span class="badge" id="dbVotesCount">0 rows</span>
+          </div>
+          <div style="overflow-x:auto;">
+            <table>
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>vote_id</th>
+                  <th>user_name</th>
+                  <th>candidate_name</th>
+                  <th>vote_hash</th>
+                  <th>created_at</th>
+                </tr>
+              </thead>
+              <tbody id="dbVotesTable"></tbody>
+            </table>
+            <div id="dbVotesEmpty" class="muted" style="padding:1rem 0;display:none;">No votes cast yet.</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel" id="setup"><div class="card"><h2>How persistence works</h2><ol class="muted"><li>Every important change updates a JavaScript state object.</li><li>That state is saved in <span class="mono">localStorage</span> under one application key.</li><li>When the HTML opens again, the app reads the stored JSON and restores users, votes, candidates, admin info, and the last logged-in user.</li><li>This works only in the same browser on the same device because local storage is browser-based, not database-based.</li><li>For a real DBMS project, move this state to MySQL or PostgreSQL through backend APIs.</li></ol><h3>WebOTP API integration</h3><ol class="muted"><li>This app uses the <strong>WebOTP API</strong> (<span class="mono">navigator.credentials.get({ otp: { transport: ['sms'] } })</span>) to auto-fill OTP codes from incoming SMS messages.</li><li>When registration triggers OTP generation, a <span class="mono">navigator.credentials.get()</span> call is started in the background with an <span class="mono">AbortController</span>.</li><li>On supported browsers (Chrome on Android), when the SMS arrives containing the OTP and the page's domain on the last line (<span class="mono">@yourdomain.com #123456</span>), the browser prompts the user to allow auto-fill.</li><li>If the user consents, the OTP is automatically filled into the input field.</li><li>The listener is automatically cancelled if the user submits manually, or after 5 minutes (matching OTP expiry).</li><li>The OTP input uses <span class="mono">autocomplete="one-time-code"</span> as a fallback — Safari will suggest the OTP from SMS keyboard suggestions even without full WebOTP support.</li><li>In production, your SMS message must end with: <span class="mono">@yourdomain.com #123456</span> for WebOTP to trigger.</li></ol><h3>Production OTP steps</h3><ol class="muted"><li>Create backend routes for registration, OTP send, OTP verify, login, vote, export, and verify.</li><li>Store hashed OTP values and expiry times in the users or otp_logs table.</li><li>Send SMS OTP using Twilio, MSG91, Fast2SMS, or Firebase Auth — format the SMS with <span class="mono">@yourdomain.com #OTP</span> on the last line for WebOTP.</li><li>Store votes and audit data in SQL, not in local storage.</li><li>Use server sessions or JWT after login and role checks for admin-only pages.</li></ol></div></section>
+
+    <section class="panel" id="sql"><div class="card"><h2>SQL schema and DBMS logic</h2><pre class="mono">-- ============================================================
+-- VoteVault DBMS Schema  (reflects full application state)
+-- ============================================================
+
+-- Stores all registered voters and admins.
+-- UUIDs are used as primary keys to match the JS crypto.randomUUID() used in the app.
+CREATE TABLE users (
+  user_id       CHAR(36)     PRIMARY KEY,          -- crypto.randomUUID()
+  full_name     VARCHAR(120) NOT NULL,
+  phone_number  VARCHAR(15)  NOT NULL UNIQUE,
+  voter_id      CHAR(8)      NOT NULL UNIQUE,
+  role          ENUM('voter','admin') DEFAULT 'voter',
+  is_verified   BOOLEAN      DEFAULT FALSE,         -- set TRUE after OTP verification
+  has_voted     BOOLEAN      DEFAULT FALSE,         -- set TRUE after castVote()
+  created_at    TIMESTAMP    DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Temporary OTP requests created during registration.
+-- One pending OTP per session; row is deleted once verified or expired.
+CREATE TABLE otp_pending (
+  otp_id        INT          PRIMARY KEY AUTO_INCREMENT,
+  full_name     VARCHAR(120) NOT NULL,
+  phone_number  VARCHAR(15)  NOT NULL,
+  voter_id      CHAR(8)      NOT NULL,
+  role          ENUM('voter','admin') DEFAULT 'voter',
+  otp_hash      VARCHAR(255) NOT NULL,              -- store hashed OTP, not plaintext
+  expires_at    DATETIME     NOT NULL,              -- OTP valid for 5 minutes
+  created_at    TIMESTAMP    DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Stores election candidates.
+CREATE TABLE candidates (
+  candidate_id    CHAR(36)     PRIMARY KEY,         -- crypto.randomUUID()
+  candidate_name  VARCHAR(120) NOT NULL,
+  created_at      TIMESTAMP    DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Each voter may cast exactly one vote (enforced by UNIQUE on user_id).
+-- Vote payload is AES-GCM encrypted; integrity verified by SHA-256 hash.
+CREATE TABLE votes (
+  vote_id         CHAR(36)     PRIMARY KEY,         -- crypto.randomUUID()
+  user_id         CHAR(36)     NOT NULL UNIQUE,     -- one vote per user
+  candidate_id    CHAR(36)     NOT NULL,
+  encrypted_vote  LONGTEXT     NOT NULL,            -- JSON: { iv, salt, data } all base64
+  vote_hash       CHAR(64)     NOT NULL,            -- SHA-256 of plaintext vote payload
+  created_at      TIMESTAMP    DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (user_id)      REFERENCES users(user_id),
+  FOREIGN KEY (candidate_id) REFERENCES candidates(candidate_id)
+);
+
+-- Tracks every encrypted export file created by an admin.
+-- Only the first-registered admin can decrypt exports (first_admin_id enforced in app logic).
+CREATE TABLE export_audit (
+  export_id       INT          PRIMARY KEY AUTO_INCREMENT,
+  exported_by     CHAR(36)     NOT NULL,            -- user_id of exporting admin
+  export_hash     CHAR(64)     NOT NULL,            -- SHA-256 of the plaintext export JSON
+  encrypted_blob  LONGTEXT     NOT NULL,            -- AES-GCM encrypted export payload
+  created_at      TIMESTAMP    DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (exported_by) REFERENCES users(user_id)
+);
+
+-- Stores app-level configuration (passphrase ref, first admin pointer, etc.)
+-- Single-row table; insert once on first admin registration.
+CREATE TABLE app_config (
+  config_id         INT       PRIMARY KEY AUTO_INCREMENT,
+  first_admin_id    CHAR(36)  DEFAULT NULL,         -- user_id of first registered admin
+  export_passphrase VARCHAR(255) NOT NULL,          -- hashed passphrase for export encryption
+  created_at        TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at        TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  FOREIGN KEY (first_admin_id) REFERENCES users(user_id)
+);
+
+-- ============================================================
+-- Useful views
+-- ============================================================
+
+-- Live vote tally per candidate
+CREATE VIEW vote_results AS
+  SELECT c.candidate_id, c.candidate_name,
+         COUNT(v.vote_id) AS total_votes
+  FROM candidates c
+  LEFT JOIN votes v ON v.candidate_id = c.candidate_id
+  GROUP BY c.candidate_id, c.candidate_name
+  ORDER BY total_votes DESC;
+
+-- Full user status overview (mirrors the DB View panel)
+CREATE VIEW user_status AS
+  SELECT user_id, full_name, phone_number, voter_id,
+         role, is_verified, has_voted, created_at
+  FROM users
+  ORDER BY created_at ASC;</pre></div></section>
+  </main>
+</div>
+<script>
+const STORAGE_KEY = 'votevault-dbms-state-v2';
+const $ = s => document.querySelector(s);
+const $$ = s => document.querySelectorAll(s);
+const defaultState = () => ({ users: [], candidates: [{ id: crypto.randomUUID(), name: 'Candidate A' }, { id: crypto.randomUUID(), name: 'Candidate B' }, { id: crypto.randomUUID(), name: 'Candidate C' }], votes: [], otpPending: null, currentUser: null, firstAdminId: null, latestExport: null, exportPassphrase: 'VoteVault-Admin-Secret' });
+function loadState(){ try { const raw = localStorage.getItem(STORAGE_KEY); if(!raw) return defaultState(); const parsed = JSON.parse(raw); const base = defaultState(); return { ...base, ...parsed, users: Array.isArray(parsed.users) ? parsed.users : base.users, candidates: Array.isArray(parsed.candidates) && parsed.candidates.length ? parsed.candidates : base.candidates, votes: Array.isArray(parsed.votes) ? parsed.votes : base.votes, otpPending: parsed.otpPending || null, currentUser: parsed.currentUser || null, firstAdminId: parsed.firstAdminId || null, latestExport: parsed.latestExport || null }; } catch { return defaultState(); } }
+const state = loadState();
+function saveState(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
+function setStatus(id, text, cls='muted') { const el = $(id); el.className = cls; el.textContent = text; }
+function isPhone(v){ return /^\d{10,15}$/.test(v); }
+function isVoter(v){ return /^\d{8}$/.test(v); }
+function genOtp(){ return Math.floor(100000 + Math.random()*900000).toString(); }
+function maskPhone(v){ return v.slice(0,2) + '******' + v.slice(-2); }
+function syncCurrentUser(){ if(!state.currentUser) return; const fresh = state.users.find(u => u.id === state.currentUser.id); state.currentUser = fresh || null; }
+function isAdmin(){ return !!(state.currentUser && state.currentUser.role === 'admin'); }
+function updateRestrictedNav(){ $$('[data-admin-only="true"]').forEach(btn => btn.style.display = isAdmin() ? 'block' : 'none'); }
+function ensureAdminAccess(target){ if(['admin','setup','sql'].includes(target) && !isAdmin()){ setStatus('#loginStatus', 'Admin login required to access admin, setup, and SQL pages.', 'err'); showPanel('login'); return false; } return true; }
+function showPanel(target){ if(!ensureAdminAccess(target)) return; $$('.nav button').forEach(b => b.classList.remove('active')); const navBtn = document.querySelector(`.nav button[data-target="${target}"]`); if(navBtn) navBtn.classList.add('active'); $$('.panel').forEach(p => p.classList.remove('active')); document.getElementById(target).classList.add('active'); }
+async function sha256(text){ const data = new TextEncoder().encode(text); const hash = await crypto.subtle.digest('SHA-256', data); return [...new Uint8Array(hash)].map(b=>b.toString(16).padStart(2,'0')).join(''); }
+async function deriveKey(passphrase, salt){ const baseKey = await crypto.subtle.importKey('raw', new TextEncoder().encode(passphrase), 'PBKDF2', false, ['deriveKey']); return crypto.subtle.deriveKey({ name:'PBKDF2', salt, iterations:100000, hash:'SHA-256' }, baseKey, { name:'AES-GCM', length:256 }, false, ['encrypt','decrypt']); }
+function toBase64(arr){ return btoa(String.fromCharCode(...new Uint8Array(arr))); }
+function fromBase64(str){ return Uint8Array.from(atob(str), c => c.charCodeAt(0)); }
+async function encryptText(text, passphrase){ const iv = crypto.getRandomValues(new Uint8Array(12)); const salt = crypto.getRandomValues(new Uint8Array(16)); const key = await deriveKey(passphrase, salt); const encrypted = await crypto.subtle.encrypt({name:'AES-GCM', iv}, key, new TextEncoder().encode(text)); return JSON.stringify({ iv: toBase64(iv), salt: toBase64(salt), data: toBase64(encrypted) }); }
+async function decryptText(payload, passphrase){ const parsed = JSON.parse(payload); const key = await deriveKey(passphrase, fromBase64(parsed.salt)); const decrypted = await crypto.subtle.decrypt({name:'AES-GCM', iv: fromBase64(parsed.iv)}, key, fromBase64(parsed.data)); return new TextDecoder().decode(decrypted); }
+function refreshStats(){ $('#statUsers').textContent = state.users.length; $('#statVotes').textContent = state.votes.length; $('#statCandidates').textContent = state.candidates.length; }
+function renderCandidates(){ const voteWrap = $('#candidateList'); const adminWrap = $('#adminCandidates'); voteWrap.innerHTML = ''; adminWrap.innerHTML = ''; state.candidates.forEach(c => { const canVote = state.currentUser && state.currentUser.role === 'voter' && state.currentUser.isVerified && !state.currentUser.hasVoted; const voteCard = document.createElement('div'); voteCard.className = 'candidate'; voteCard.innerHTML = `<div><strong>${c.name}</strong><div class="muted">Candidate ID: ${c.id.slice(0,8)}</div></div><button class="btn btn-primary" ${canVote ? '' : 'disabled'} data-vote="${c.id}">Vote</button>`; voteWrap.appendChild(voteCard); if(isAdmin()){ const adminCard = document.createElement('div'); adminCard.className = 'candidate'; adminCard.innerHTML = `<div><strong>${c.name}</strong></div><button class="btn btn-secondary" data-remove="${c.id}">Remove</button>`; adminWrap.appendChild(adminCard); } }); $$('[data-vote]').forEach(btn => btn.onclick = () => castVote(btn.dataset.vote)); $$('[data-remove]').forEach(btn => btn.onclick = () => removeCandidate(btn.dataset.remove)); }
+function renderUsers(){ $('#userTable').innerHTML = state.users.map(u => `<tr><td>${u.name}</td><td>${u.voterId}</td><td>${u.phone}</td><td>${u.role}</td><td>${u.isVerified ? 'Yes' : 'No'}</td><td>${u.hasVoted ? 'Yes' : 'No'}</td></tr>`).join(''); }
+function renderResults(){ const counts = state.candidates.map(c => ({ name:c.name, votes: state.votes.filter(v => v.candidateId === c.id).length })); $('#resultsTable').innerHTML = counts.map(r => `<tr><td>${r.name}</td><td>${r.votes}</td></tr>`).join(''); }
+function updateSession(){ if(!state.currentUser){ $('#sessionBox').textContent = 'No user logged in.'; $('#adminSession').textContent = 'Login as admin to manage candidates and exports.'; $('#voteStatus').textContent = 'Login first to vote.'; return; } $('#sessionBox').innerHTML = `<strong>${state.currentUser.name}</strong><br><span class="muted">${state.currentUser.role} | ${state.currentUser.voterId} | ${maskPhone(state.currentUser.phone)}</span>`; $('#voteStatus').innerHTML = state.currentUser.hasVoted ? '<span class="status ok">Vote submitted</span>' : '<span class="status warn">Vote pending</span>'; $('#adminSession').textContent = state.currentUser.role === 'admin' ? `Admin logged in: ${state.currentUser.name}` : 'Current user is not an admin.'; }
+function renderDbView(){
+  // Users table
+  const users = state.users;
+  $('#dbUsersCount').textContent = users.length + ' row' + (users.length !== 1 ? 's' : '');
+  if(users.length === 0){
+    $('#dbUsersTable').innerHTML = '';
+    $('#dbUsersEmpty').style.display = 'block';
+  } else {
+    $('#dbUsersEmpty').style.display = 'none';
+    $('#dbUsersTable').innerHTML = users.map((u, i) => `
+      <tr>
+        <td class="muted">${i+1}</td>
+        <td class="mono" style="font-size:0.7rem;">${u.id.slice(0,8)}…</td>
+        <td><strong>${u.name}</strong></td>
+        <td>${maskPhone(u.phone)}</td>
+        <td class="mono">${u.voterId}</td>
+        <td><span class="badge">${u.role}</span></td>
+        <td>${u.isVerified ? '<span class="status ok">Yes</span>' : '<span class="status err">No</span>'}</td>
+        <td>${u.hasVoted ? '<span class="status ok">Yes</span>' : '<span class="status warn">No</span>'}</td>
+        <td class="muted" style="font-size:0.7rem;">${u.createdAt ? new Date(u.createdAt).toLocaleString() : '—'}</td>
+      </tr>`).join('');
+  }
+  // Candidates table
+  const candidates = state.candidates;
+  $('#dbCandidatesCount').textContent = candidates.length + ' row' + (candidates.length !== 1 ? 's' : '');
+  if(candidates.length === 0){
+    $('#dbCandidatesTable').innerHTML = '';
+    $('#dbCandidatesEmpty').style.display = 'block';
+  } else {
+    $('#dbCandidatesEmpty').style.display = 'none';
+    $('#dbCandidatesTable').innerHTML = candidates.map((c, i) => {
+      const voteCount = state.votes.filter(v => v.candidateId === c.id).length;
+      return `<tr>
+        <td class="muted">${i+1}</td>
+        <td class="mono" style="font-size:0.7rem;">${c.id.slice(0,8)}…</td>
+        <td><strong>${c.name}</strong></td>
+        <td><span class="badge">${voteCount}</span></td>
+      </tr>`;
+    }).join('');
+  }
+  // Votes table
+  const votes = state.votes;
+  $('#dbVotesCount').textContent = votes.length + ' row' + (votes.length !== 1 ? 's' : '');
+  if(votes.length === 0){
+    $('#dbVotesTable').innerHTML = '';
+    $('#dbVotesEmpty').style.display = 'block';
+  } else {
+    $('#dbVotesEmpty').style.display = 'none';
+    $('#dbVotesTable').innerHTML = votes.map((v, i) => {
+      const voter = state.users.find(u => u.id === v.userId);
+      const candidate = state.candidates.find(c => c.id === v.candidateId);
+      return `<tr>
+        <td class="muted">${i+1}</td>
+        <td class="mono" style="font-size:0.7rem;">${v.id.slice(0,8)}…</td>
+        <td>${voter ? voter.name : '<span class="muted">Unknown</span>'}</td>
+        <td>${candidate ? candidate.name : '<span class="muted">Unknown</span>'}</td>
+        <td class="mono" style="font-size:0.7rem;">${v.voteHash ? v.voteHash.slice(0,16)+'…' : '—'}</td>
+        <td class="muted" style="font-size:0.7rem;">${v.createdAt ? new Date(v.createdAt).toLocaleString() : '—'}</td>
+      </tr>`;
+    }).join('');
+  }
+  $('#dbLastUpdated').textContent = 'Updated ' + new Date().toLocaleTimeString();
+}
+function refreshAll(){ syncCurrentUser(); refreshStats(); renderCandidates(); renderUsers(); renderResults(); renderDbView(); updateSession(); updateRestrictedNav(); saveState(); }
+// WebOTP: AbortController held at module scope so we can cancel across events
+let webOtpAbortController = null;
+
+function startWebOtpListener() {
+  // Cancel any existing listener first
+  if (webOtpAbortController) { webOtpAbortController.abort(); webOtpAbortController = null; }
+
+  // WebOTP API is only available in secure contexts (HTTPS) on supporting browsers (Chrome/Android)
+  if (!('OTPCredential' in window)) {
+    $('#webOtpSupportBadge').classList.add('hide');
+    return;
+  }
+
+  webOtpAbortController = new AbortController();
+  const signal = webOtpAbortController.signal;
+
+  // Show support badge and waiting indicator
+  $('#webOtpSupportBadge').classList.remove('hide');
+  $('#webOtpIndicator').classList.remove('hide');
+
+  // Auto-abort after 5 minutes (matches OTP expiry)
+  const timeoutId = setTimeout(() => {
+    if (webOtpAbortController) { webOtpAbortController.abort(); webOtpAbortController = null; }
+    $('#webOtpIndicator').classList.add('hide');
+  }, 5 * 60 * 1000);
+
+  navigator.credentials.get({ otp: { transport: ['sms'] }, signal })
+    .then(otpCredential => {
+      clearTimeout(timeoutId);
+      // Auto-fill the OTP input with the received code
+      const input = $('#regOtp');
+      input.value = otpCredential.code;
+      $('#webOtpIndicator').textContent = '✅ OTP auto-filled!';
+      setTimeout(() => $('#webOtpIndicator').classList.add('hide'), 3000);
+      setStatus('#registerStatus', 'OTP received via SMS and auto-filled. Tap verify to continue.', 'ok');
+    })
+    .catch(err => {
+      clearTimeout(timeoutId);
+      $('#webOtpIndicator').classList.add('hide');
+      // AbortError is expected when user submits manually or OTP expires — not an error
+      if (err.name !== 'AbortError') {
+        console.warn('WebOTP error:', err);
+      }
+    });
+}
+
+function stopWebOtpListener() {
+  if (webOtpAbortController) { webOtpAbortController.abort(); webOtpAbortController = null; }
+  $('#webOtpIndicator').classList.add('hide');
+  $('#webOtpSupportBadge').classList.add('hide');
+}
+
+$('#registerForm').addEventListener('submit', e => {
+  e.preventDefault();
+  const name = $('#regName').value.trim();
+  const phone = $('#regPhone').value.trim();
+  const voterId = $('#regVoterId').value.trim();
+  const role = $('#regRole').value;
+  if (!name || !isPhone(phone) || !isVoter(voterId))
+    return setStatus('#registerStatus', 'Enter valid name, phone number, and 8-digit voter ID.', 'err');
+  if (state.users.some(u => u.phone === phone || u.voterId === voterId))
+    return setStatus('#registerStatus', 'Phone number or voter ID already exists.', 'err');
+  const otp = genOtp();
+  state.otpPending = { name, phone, voterId, role, otp, expiresAt: Date.now() + 5 * 60 * 1000 };
+  $('#verifyOtpForm').classList.remove('hide');
+  $('#registerOtpInfo').classList.remove('hide');
+  $('#registerOtpInfo').innerHTML = `<strong>Demo OTP:</strong> ${otp}<br><span class="muted">In production, send via SMS gateway. WebOTP will auto-fill it on supported devices.</span>`;
+  setStatus('#registerStatus', 'OTP generated. Enter it below or wait for auto-fill on supported browsers.');
+  refreshAll();
+  // Start WebOTP listener after showing the OTP form
+  startWebOtpListener();
+});
+
+$('#verifyOtpForm').addEventListener('submit', e => {
+  e.preventDefault();
+  // Stop WebOTP listener — user is submitting manually
+  stopWebOtpListener();
+  if (!state.otpPending) return setStatus('#registerStatus', 'No OTP request found.', 'err');
+  const entered = $('#regOtp').value.trim();
+  if (Date.now() > state.otpPending.expiresAt) return setStatus('#registerStatus', 'OTP expired. Register again.', 'err');
+  if (entered !== state.otpPending.otp) return setStatus('#registerStatus', 'Incorrect OTP.', 'err');
+  const user = { id: crypto.randomUUID(), name: state.otpPending.name, phone: state.otpPending.phone, voterId: state.otpPending.voterId, role: state.otpPending.role, isVerified: true, hasVoted: false, createdAt: new Date().toISOString() };
+  state.users.push(user);
+  if (user.role === 'admin' && !state.firstAdminId) state.firstAdminId = user.id;
+  state.otpPending = null;
+  $('#registerForm').reset();
+  $('#verifyOtpForm').reset();
+  $('#verifyOtpForm').classList.add('hide');
+  $('#registerOtpInfo').classList.add('hide');
+  setStatus('#registerStatus', 'Registration successful. Account verified and saved.', 'ok');
+  refreshAll();
+});
+$('#loginForm').addEventListener('submit', e => { e.preventDefault(); const voterId = $('#loginVoterId').value.trim(); const phone = $('#loginPhone').value.trim(); const user = state.users.find(u => u.voterId === voterId && u.phone === phone && u.isVerified); if(!user) return setStatus('#loginStatus', 'Invalid credentials or account not verified.', 'err'); state.currentUser = user; setStatus('#loginStatus', `Logged in as ${user.name} (${user.role}). Session restored on reopen in this browser.`, 'ok'); refreshAll(); showPanel(user.role === 'admin' ? 'admin' : 'vote'); });
+$('#logoutBtn').addEventListener('click', () => { state.currentUser = null; setStatus('#loginStatus', 'Logged out. Saved data still remains on this browser.', 'ok'); refreshAll(); showPanel('dashboard'); });
+$('#resetStorageBtn').addEventListener('click', () => { localStorage.removeItem(STORAGE_KEY); Object.assign(state, defaultState()); setStatus('#loginStatus', 'Saved demo data reset.', 'ok'); refreshAll(); showPanel('dashboard'); });
+async function castVote(candidateId){ const user = state.currentUser; if(!user) return setStatus('#voteStatus', 'Login first.', 'err'); if(user.role !== 'voter') return setStatus('#voteStatus', 'Admins cannot vote.', 'err'); if(user.hasVoted) return setStatus('#voteStatus', 'This voter has already voted.', 'err'); const votePlain = JSON.stringify({ userId:user.id, candidateId, time:new Date().toISOString() }); const encryptedVote = await encryptText(votePlain, state.exportPassphrase); const voteHash = await sha256(votePlain); state.votes.push({ id:crypto.randomUUID(), userId:user.id, candidateId, encryptedVote, voteHash, createdAt:new Date().toISOString() }); user.hasVoted = true; setStatus('#voteStatus', 'Vote submitted securely and saved.', 'ok'); refreshAll(); }
+$('#candidateForm').addEventListener('submit', e => { e.preventDefault(); if(!isAdmin()) return setStatus('#adminStatus', 'Admin login required.', 'err'); const name = $('#candidateName').value.trim(); if(!name) return setStatus('#adminStatus', 'Enter a candidate name.', 'err'); state.candidates.push({ id: crypto.randomUUID(), name }); $('#candidateForm').reset(); setStatus('#adminStatus', 'Candidate added and saved.', 'ok'); refreshAll(); });
+function removeCandidate(id){ if(!isAdmin()) return setStatus('#adminStatus', 'Admin login required.', 'err'); if(state.votes.some(v => v.candidateId === id)) return setStatus('#adminStatus', 'Cannot remove candidate with recorded votes.', 'err'); state.candidates = state.candidates.filter(c => c.id !== id); setStatus('#adminStatus', 'Candidate removed and saved.', 'ok'); refreshAll(); }
+$('#exportBtn').addEventListener('click', async () => { if(!isAdmin()) return setStatus('#adminStatus', 'Admin login required for export.', 'err'); const exportObj = { exportedAt: new Date().toISOString(), exportedBy: state.currentUser.name, users: state.users.map(u => ({ name:u.name, voterId:u.voterId, phone:u.phone, role:u.role, isVerified:u.isVerified, hasVoted:u.hasVoted })), votes: state.votes.map(v => ({ userId:v.userId, candidateId:v.candidateId, voteHash:v.voteHash, createdAt:v.createdAt })), candidates: state.candidates }; const plain = JSON.stringify(exportObj, null, 2); const hash = await sha256(plain); const encrypted = await encryptText(JSON.stringify({ hash, plain }), state.exportPassphrase); state.latestExport = { encrypted, hash, plain }; const blob = new Blob([encrypted], { type:'text/plain' }); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'encrypted-vote-export.txt'; a.click(); setStatus('#adminStatus', `Encrypted export created. Integrity hash: ${hash.slice(0,16)}...`, 'ok'); refreshAll(); });
+$('#decryptBtn').addEventListener('click', async () => { if(!state.currentUser || state.currentUser.id !== state.firstAdminId) return setStatus('#adminStatus', 'Only the first admin account can decrypt exports.', 'err'); if(!state.latestExport) return setStatus('#adminStatus', 'Create or import an export first.', 'err'); try { const raw = await decryptText(state.latestExport.encrypted, state.exportPassphrase); const payload = JSON.parse(raw); const blob = new Blob([payload.plain], { type:'text/plain' }); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'decrypted-vote-export.txt'; a.click(); setStatus('#adminStatus', 'Decrypted file downloaded by first admin.', 'ok'); } catch { setStatus('#adminStatus', 'Decryption failed.', 'err'); } });
+$('#verifyBtn').addEventListener('click', async () => { if(!isAdmin()) return setStatus('#adminStatus', 'Admin login required.', 'err'); const file = $('#importFile').files[0]; if(!file) return setStatus('#adminStatus', 'Choose an encrypted export text file first.', 'err'); const encrypted = await file.text(); try { const raw = await decryptText(encrypted, state.exportPassphrase); const payload = JSON.parse(raw); const recalculated = await sha256(payload.plain); if(recalculated !== payload.hash) return setStatus('#adminStatus', 'File was modified. Hash mismatch detected.', 'err'); const parsed = JSON.parse(payload.plain); const currentPlain = JSON.stringify({ exportedAt: parsed.exportedAt, exportedBy: parsed.exportedBy, users: state.users.map(u => ({ name:u.name, voterId:u.voterId, phone:u.phone, role:u.role, isVerified:u.isVerified, hasVoted:u.hasVoted })), votes: state.votes.map(v => ({ userId:v.userId, candidateId:v.candidateId, voteHash:v.voteHash, createdAt:v.createdAt })), candidates: state.candidates }, null, 2); const currentHash = await sha256(currentPlain); const sameStructure = currentHash === payload.hash; state.latestExport = { encrypted, hash: payload.hash, plain: payload.plain }; setStatus('#adminStatus', sameStructure ? 'File integrity valid and current HTML data matches export.' : 'File integrity valid, but current HTML data differs from exported snapshot.', sameStructure ? 'ok' : 'warn'); refreshAll(); } catch { setStatus('#adminStatus', 'Verification failed. Invalid file or wrong encryption format.', 'err'); } });
+$$('.nav button').forEach(btn => btn.addEventListener('click', () => showPanel(btn.dataset.target)));
+$('#themeToggle').addEventListener('click', () => { document.documentElement.setAttribute('data-theme', document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark'); });
+refreshAll();
+showPanel(isAdmin() ? 'admin' : 'dashboard');
+</script>
+</body>
+</html>
